@@ -50,9 +50,6 @@ const categoriesCollection = db.collection('categories');
 const settingsCollection = db.collection('settings');
 const stockHistoryCollection = db.collection('stockHistory');
 
-// Storage References
-const logosStorageRef = storage.ref('logos');
-const backupsStorageRef = storage.ref('backups');
 
 // Firebase ready flag
 let firebaseReady = false;

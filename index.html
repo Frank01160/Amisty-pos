@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amisty POS - Login</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/glow.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="index.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+    <!-- Aurora Background -->
+    <div class="aurora-container" id="auroraContainer">
+        <div class="aurora-wave"></div>
+        <div class="aurora-wave"></div>
+        <div class="aurora-wave"></div>
+    </div>
+
+    <!-- Floating Particles -->
+    <div class="particles-container" id="particlesContainer"></div>
+
+    <!-- Main Login Container -->
+    <div class="login-wrapper">
+        <div class="login-container rotating-border">
+            <div class="login-inner">
+                <!-- Logo & Brand -->
+                <div class="login-brand">
+                    <div class="brand-logo">
+                        <div class="logo-circle">
+                            <span class="logo-text">A</span>
+                        </div>
+                    </div>
+                    <h1 class="brand-name neon-text">AMISTY POS</h1>
+                    <p class="brand-tagline">Smart Solutions for Small Business</p>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label class="form-label" for="email">
+                            <span class="label-icon">📧</span> Email Address
+                        </label>
+                        <div class="input-wrapper">
+                            <input 
+                                type="email" 
+                                id="email" 
+                                class="form-input glow-input" 
+                                placeholder="Enter your email"
+                                required
+                                autocomplete="email"
+                            >
+                            <span class="input-focus-border"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">
+                            <span class="label-icon">🔒</span> Password
+                        </label>
+                        <div class="input-wrapper">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                class="form-input glow-input" 
+                                placeholder="Enter your password"
+                                required
+                                autocomplete="current-password"
+                            >
+                            <button type="button" class="password-toggle" id="passwordToggle">
+                                👁️
+                            </button>
+                            <span class="input-focus-border"></span>
+                        </div>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div class="error-message" id="errorMessage" style="display: none;">
+                        <span class="error-icon">⚠️</span>
+                        <span class="error-text"></span>
+                    </div>
+
+                    <!-- Login Button -->
+                    <button type="submit" class="btn btn-primary btn-lg btn-full glow-btn ripple" id="loginButton">
+                        <span class="btn-text">Sign In</span>
+                        <span class="btn-loader" style="display: none;">
+                            <span class="spinner-small"></span>
+                        </span>
+                    </button>
+                </form>
+
+                <!-- Setup Wizard Link -->
+                <div class="setup-link" id="setupSection" style="display: none;">
+                    <div class="divider">
+                        <span>First time?</span>
+                    </div>
+                    <button class="btn btn-outline btn-full" id="setupButton">
+                        🚀 Setup Your Shop
+                    </button>
+                </div>
+
+                <!-- Footer -->
+                <div class="login-footer">
+                    <p>&copy; 2026 Amisty POS. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Wizard Modal -->
+    <div class="modal-overlay" id="setupModal" style="display: none;">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h2 class="modal-title">🚀 Shop Setup Wizard</h2>
+                <button class="modal-close" id="closeSetupModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="setupForm">
+                    <div class="setup-steps">
+                        <!-- Step 1: Basic Info -->
+                        <div class="setup-step active" data-step="1">
+                            <h3>Step 1: Shop Information</h3>
+                            <div class="form-group">
+                                <label class="form-label">Shop Name *</label>
+                                <input type="text" id="setupShopName" class="form-input" placeholder="My Shop Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Shop Address</label>
+                                <input type="text" id="setupAddress" class="form-input" placeholder="123 Main Street">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" id="setupPhone" class="form-input" placeholder="+254 700 000000">
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Admin Account -->
+                        <div class="setup-step" data-step="2">
+                            <h3>Step 2: Admin Account</h3>
+                            <div class="form-group">
+                                <label class="form-label">Admin Email *</label>
+                                <input type="email" id="setupEmail" class="form-input" placeholder="admin@shop.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password *</label>
+                                <input type="password" id="setupPassword" class="form-input" placeholder="Min 6 characters" required minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm Password *</label>
+                                <input type="password" id="setupConfirmPassword" class="form-input" placeholder="Confirm password" required>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Receipt Setup -->
+                        <div class="setup-step" data-step="3">
+                            <h3>Step 3: Receipt Settings</h3>
+                            <div class="form-group">
+                                <label class="form-label">Receipt Footer Text</label>
+                                <input type="text" id="setupFooter" class="form-input" placeholder="Asante kwa kununua kwetu! Karibu tena!" value="Asante kwa kununua kwetu! Karibu tena!">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Receipt Number Prefix</label>
+                                <input type="text" id="setupPrefix" class="form-input" placeholder="AMI-" value="AMI-">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Currency</label>
+                                <select id="setupCurrency" class="form-select">
+                                    <option value="KES">KES - Kenyan Shilling</option>
+                                    <option value="USD">USD - US Dollar</option>
+                                    <option value="TZS">TZS - Tanzanian Shilling</option>
+                                    <option value="UGX">UGX - Ugandan Shilling</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step Navigation -->
+                    <div class="step-navigation">
+                        <button type="button" class="btn btn-outline" id="prevStep" disabled>← Previous</button>
+                        <div class="step-indicators">
+                            <span class="step-dot active" data-step="1"></span>
+                            <span class="step-dot" data-step="2"></span>
+                            <span class="step-dot" data-step="3"></span>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="nextStep">Next →</button>
+                        <button type="submit" class="btn btn-success" id="submitSetup" style="display: none;">✅ Complete Setup</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- JavaScript Files -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

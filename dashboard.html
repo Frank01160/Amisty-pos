@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amisty POS - Dashboard</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/glow.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="dashboard.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+    <!-- Aurora Background -->
+    <div class="aurora-container">
+        <div class="aurora-wave"></div>
+        <div class="aurora-wave"></div>
+        <div class="aurora-wave"></div>
+    </div>
+
+    <!-- Particles -->
+    <div class="particles-container" id="particlesContainer"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1 class="header-title">AMISTY POS</h1>
+        </div>
+        <div class="header-center">
+            <div class="online-status">
+                <span class="status-online" id="onlineStatus"></span>
+                <span id="onlineText">Online</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-date" id="currentDate"></div>
+            <div class="user-menu">
+                <div class="user-avatar" id="userAvatar">
+                    <span id="userInitial">M</span>
+                </div>
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="user-info">
+                        <span id="userName">Manager</span>
+                        <span id="userEmail">manager@shop.com</span>
+                    </div>
+                    <button class="dropdown-item" id="logoutButton">
+                        <span>🚪</span> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-menu">
+            <a href="dashboard.html" class="sidebar-item active" data-page="dashboard">
+                <span class="sidebar-icon">📊</span>
+                <span class="sidebar-text">Dashboard</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="pos.html" class="sidebar-item" data-page="pos">
+                <span class="sidebar-icon">🛒</span>
+                <span class="sidebar-text">POS Terminal</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="inventory.html" class="sidebar-item" data-page="inventory">
+                <span class="sidebar-icon">📦</span>
+                <span class="sidebar-text">Inventory</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="reports.html" class="sidebar-item" data-page="reports">
+                <span class="sidebar-icon">📈</span>
+                <span class="sidebar-text">Reports</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="settings.html" class="sidebar-item" data-page="settings">
+                <span class="sidebar-icon">⚙️</span>
+                <span class="sidebar-text">Settings</span>
+                <span class="sidebar-glow"></span>
+            </a>
+        </div>
+        <div class="sidebar-footer">
+            <div class="sidebar-shop-info">
+                <span id="sidebarShopName">My Shop</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <h2>Welcome back, <span id="welcomeName">Manager</span> 👋</h2>
+                <p id="welcomeMessage">Here's what's happening in your shop today.</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" id="statsGrid">
+                <!-- Total Sales Card -->
+                <div class="stat-card card-lift rotating-border">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-value counter-up" id="totalSales">0.00</div>
+                        <div class="stat-label">Total Sales Today</div>
+                        <div class="stat-change positive" id="salesChange">↑ 0%</div>
+                    </div>
+                </div>
+
+                <!-- Transactions Card -->
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">🛒</div>
+                        <div class="stat-value counter-up" id="totalTransactions">0</div>
+                        <div class="stat-label">Transactions Today</div>
+                        <div class="stat-change" id="txnChange">Today</div>
+                    </div>
+                </div>
+
+                <!-- Profit Card -->
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">💎</div>
+                        <div class="stat-value counter-up" id="totalProfit">0.00</div>
+                        <div class="stat-label">Profit Today</div>
+                        <div class="stat-change positive" id="profitChange">↑ 0%</div>
+                    </div>
+                </div>
+
+                <!-- Low Stock Alert Card -->
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-value counter-up" id="lowStockCount">0</div>
+                        <div class="stat-label">Low Stock Items</div>
+                        <div class="stat-change" id="stockAlert">Needs attention</div>
+                    </div>
+                </div>
+
+                <!-- Cash Sales Card -->
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">💵</div>
+                        <div class="stat-value counter-up" id="cashSales">0.00</div>
+                        <div class="stat-label">Cash Sales</div>
+                        <div class="stat-change" id="cashPercentage">0%</div>
+                    </div>
+                </div>
+
+                <!-- Mobile Money Card -->
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">📱</div>
+                        <div class="stat-value counter-up" id="mobileSales">0.00</div>
+                        <div class="stat-label">Mobile Money Sales</div>
+                        <div class="stat-change" id="mobilePercentage">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="section">
+                <h3 class="section-title">Quick Actions</h3>
+                <div class="quick-actions">
+                    <a href="pos.html" class="quick-action-card card-lift">
+                        <span class="quick-action-icon">🛒</span>
+                        <span class="quick-action-text">Open POS</span>
+                    </a>
+                    <a href="inventory.html" class="quick-action-card card-lift">
+                        <span class="quick-action-icon">📦</span>
+                        <span class="quick-action-text">Add Stock</span>
+                    </a>
+                    <a href="reports.html" class="quick-action-card card-lift">
+                        <span class="quick-action-icon">📈</span>
+                        <span class="quick-action-text">View Reports</span>
+                    </a>
+                    <a href="inventory.html#low-stock" class="quick-action-card card-lift">
+                        <span class="quick-action-icon">⚠️</span>
+                        <span class="quick-action-text">Low Stock Items</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Two Column Layout -->
+            <div class="dashboard-grid">
+                <!-- Top Products Today -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🔥 Top Products Today</h3>
+                        <span class="badge badge-info">Live</span>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Sold</th>
+                                    <th>Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topProductsTable">
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No sales yet today</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 Recent Transactions</h3>
+                        <a href="reports.html" class="btn btn-outline btn-sm">View All</a>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Receipt #</th>
+                                    <th>Time</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Payment</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTransactions">
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No transactions yet today</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dead Stock Alert -->
+            <div class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">💀 Dead Stock Alert</h3>
+                        <span class="badge badge-warning">60+ Days</span>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Stock</th>
+                                    <th>Last Sold</th>
+                                    <th>Days Inactive</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deadStockTable">
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No dead stock - Great job! 🎉</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav show-mobile" id="mobileNav">
+        <a href="dashboard.html" class="mobile-nav-item active">
+            <span class="nav-icon">📊</span>
+            <span>Dashboard</span>
+        </a>
+        <a href="pos.html" class="mobile-nav-item">
+            <span class="nav-icon">🛒</span>
+            <span>POS</span>
+        </a>
+        <a href="inventory.html" class="mobile-nav-item">
+            <span class="nav-icon">📦</span>
+            <span>Stock</span>
+        </a>
+        <a href="reports.html" class="mobile-nav-item">
+            <span class="nav-icon">📈</span>
+            <span>Reports</span>
+        </a>
+        <a href="settings.html" class="mobile-nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span>Settings</span>
+        </a>
+    </nav>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- JavaScript Files -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/offline.js"></script>
+    <script src="js/sound.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

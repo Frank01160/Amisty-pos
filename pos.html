@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amisty POS - Sales Terminal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/glow.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="pos.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+    <!-- Aurora Background -->
+    <div class="aurora-container">
+        <div class="aurora-wave"></div>
+        <div class="aurora-wave"></div>
+        <div class="aurora-wave"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1 class="header-title">POS Terminal</h1>
+        </div>
+        <div class="header-center">
+            <div class="online-status">
+                <span class="status-online" id="onlineStatus"></span>
+                <span id="onlineText">Online</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-outline btn-sm" id="holdSaleButton">
+                ⏸️ Hold
+            </button>
+            <button class="btn btn-outline btn-sm" id="clearBasketButton">
+                🗑️ Clear
+            </button>
+            <div class="user-menu">
+                <div class="user-avatar">
+                    <span id="userInitial">S</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main POS Layout -->
+    <div class="pos-layout">
+        <!-- Left Panel - Product Selection -->
+        <div class="pos-left">
+            <!-- Search & Filter -->
+            <div class="pos-search-section">
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input 
+                        type="text" 
+                        id="productSearch" 
+                        placeholder="Search products..."
+                        class="form-input"
+                    >
+                </div>
+                <div class="category-filter">
+                    <select id="categoryFilter" class="form-select">
+                        <option value="all">📂 All Categories</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Quick Sale Buttons -->
+            <div class="quick-sale-buttons" id="quickSaleButtons">
+                <!-- Dynamic quick sale buttons -->
+            </div>
+
+            <!-- Products Table -->
+            <div class="products-section">
+                <div class="table-container">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Stock</th>
+                                <th>Price</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    <div class="shimmer" style="height: 40px;"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Unit Selection Modal (for products with multiple units) -->
+            <div class="modal-overlay" id="unitSelectionModal" style="display: none;">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Select Unit</h3>
+                        <button class="modal-close" id="closeUnitModal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="unitProductName" class="text-muted"></p>
+                        <div class="unit-options" id="unitOptions">
+                            <!-- Dynamic unit buttons -->
+                        </div>
+                        <div class="form-group" id="quantityInputGroup" style="display: none;">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" id="unitQuantity" class="form-input" min="0.01" step="0.01" placeholder="Enter quantity">
+                            <small class="text-muted" id="stockAvailable"></small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" id="cancelUnitSelection">Cancel</button>
+                        <button class="btn btn-primary" id="confirmUnitSelection">Add to Basket</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Basket -->
+        <div class="pos-right">
+            <!-- Customer Info -->
+            <div class="basket-header">
+                <h3>🛒 Basket</h3>
+                <div class="form-group">
+                    <input 
+                        type="text" 
+                        id="customerName" 
+                        class="form-input" 
+                        placeholder="Customer name (optional)"
+                    >
+                </div>
+            </div>
+
+            <!-- Basket Items -->
+            <div class="basket-items" id="basketItems">
+                <div class="empty-basket">
+                    <span class="empty-basket-icon">🛒</span>
+                    <p>No items in basket</p>
+                    <p class="text-muted">Select products to start a sale</p>
+                </div>
+            </div>
+
+            <!-- Basket Totals -->
+            <div class="basket-totals" id="basketTotals" style="display: none;">
+                <div class="total-row">
+                    <span>Subtotal</span>
+                    <span id="basketSubtotal">0.00</span>
+                </div>
+                <div class="total-row discount-row">
+                    <span>Discount (Ksh)</span>
+                    <div class="discount-input-group">
+                        <input 
+                            type="number" 
+                            id="discountAmount" 
+                            class="form-input" 
+                            min="0" 
+                            value="0"
+                            placeholder="0"
+                        >
+                    </div>
+                </div>
+                <div class="total-row total-final">
+                    <span>TOTAL</span>
+                    <span id="basketTotal">0.00</span>
+                </div>
+                <div class="total-row text-muted">
+                    <span>Profit</span>
+                    <span id="basketProfit">0.00</span>
+                </div>
+            </div>
+
+            <!-- Payment Section -->
+            <div class="payment-section" id="paymentSection">
+                <div class="payment-methods">
+                    <label class="payment-option">
+                        <input type="radio" name="paymentMethod" value="cash" checked>
+                        <span class="payment-card">
+                            <span>💵</span> Cash
+                        </span>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="paymentMethod" value="mobile">
+                        <span class="payment-card">
+                            <span>📱</span> Mobile Money
+                        </span>
+                    </label>
+                </div>
+                <button class="btn btn-success btn-lg btn-full glow-btn" id="completeSaleButton" disabled>
+                    💳 Complete Sale - Ksh <span id="completeSaleAmount">0.00</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">✅ Confirm Sale</h3>
+                <button class="modal-close" id="closeConfirmModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="sale-summary" id="saleSummary">
+                    <!-- Dynamic sale summary -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelSale">Cancel</button>
+                <button class="btn btn-outline" id="printReceiptOnly">🖨️ Print Receipt</button>
+                <button class="btn btn-outline" id="downloadReceiptOnly">📥 Download Receipt</button>
+                <button class="btn btn-success" id="confirmSale">✅ Complete Sale</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Preview Modal -->
+    <div class="modal-overlay" id="receiptModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">🧾 Receipt</h3>
+                <button class="modal-close" id="closeReceiptModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="receipt-preview" id="receiptPreview">
+                    <!-- Dynamic receipt -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="printReceipt">🖨️ Print</button>
+                <button class="btn btn-secondary" id="downloadReceipt">📥 Download PDF</button>
+                <button class="btn btn-outline" id="closeReceipt">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- JavaScript Files -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/offline.js"></script>
+    <script src="js/sound.js"></script>
+    <script src="js/receipt.js"></script>
+    <script src="pos.js"></script>
+</body>
+</html>

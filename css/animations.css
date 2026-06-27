@@ -1,0 +1,314 @@
+/* ============================================
+   AMISTY POS - ANIMATIONS
+   Moving Backgrounds, Particle Effects, etc.
+   ============================================ */
+
+/* Aurora Waves */
+.aurora-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.aurora-wave {
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+        ellipse at 50% 50%,
+        rgba(255, 107, 53, 0.1) 0%,
+        transparent 50%
+    );
+    animation: auroraFloat 20s ease-in-out infinite;
+}
+
+.aurora-wave:nth-child(2) {
+    background: radial-gradient(
+        ellipse at 50% 50%,
+        rgba(0, 242, 254, 0.1) 0%,
+        transparent 50%
+    );
+    animation-delay: -7s;
+}
+
+.aurora-wave:nth-child(3) {
+    background: radial-gradient(
+        ellipse at 50% 50%,
+        rgba(255, 215, 0, 0.05) 0%,
+        transparent 50%
+    );
+    animation-delay: -14s;
+}
+
+@keyframes auroraFloat {
+    0%, 100% { transform: translate(0%, 0%) rotate(0deg); }
+    25% { transform: translate(10%, -10%) rotate(5deg); }
+    50% { transform: translate(-5%, 5%) rotate(-3deg); }
+    75% { transform: translate(-10%, -5%) rotate(2deg); }
+}
+
+/* Floating Particles */
+.particles-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: var(--accent-gold);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--accent-gold-glow);
+    animation: particleFloat 8s ease-in infinite;
+}
+
+@keyframes particleFloat {
+    0% {
+        transform: translateY(100vh) scale(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100vh) scale(1);
+        opacity: 0;
+    }
+}
+
+/* Glowing Pulse Effect */
+.glow-pulse {
+    animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+    0%, 100% {
+        box-shadow: 0 0 5px var(--primary-glow),
+                    0 0 20px var(--primary-glow),
+                    0 0 40px var(--primary-glow);
+    }
+    50% {
+        box-shadow: 0 0 10px var(--primary-glow),
+                    0 0 30px var(--primary-glow),
+                    0 0 60px var(--primary-glow);
+    }
+}
+
+/* Rotating Border Light */
+.rotating-border {
+    position: relative;
+    overflow: hidden;
+}
+
+.rotating-border::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        transparent,
+        var(--primary),
+        transparent,
+        var(--secondary),
+        transparent
+    );
+    animation: rotate 4s linear infinite;
+    z-index: -1;
+}
+
+.rotating-border::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: var(--bg-dark);
+    border-radius: inherit;
+    z-index: -1;
+}
+
+@keyframes rotate {
+    100% { transform: rotate(360deg); }
+}
+
+/* 3D Card Lift */
+.card-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-lift:hover {
+    transform: translateY(-8px) rotateX(5deg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+                0 0 30px var(--primary-glow);
+}
+
+/* Slide In From Left */
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Slide In From Bottom */
+@keyframes slideInUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Fade In */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Scale In */
+@keyframes scaleIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Ripple Effect */
+.ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(0);
+    animation: rippleAnimation 0.6s ease-out;
+    pointer-events: none;
+}
+
+@keyframes rippleAnimation {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* Shimmer Loading */
+.shimmer {
+    background: linear-gradient(
+        90deg,
+        var(--bg-card) 25%,
+        rgba(255, 255, 255, 0.1) 50%,
+        var(--bg-card) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Number Counter */
+.counter-up {
+    animation: countUp 1.5s ease-out;
+}
+
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Bounce In */
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.05); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Neon Flicker */
+.neon-flicker {
+    animation: neonFlicker 1.5s infinite alternate;
+}
+
+@keyframes neonFlicker {
+    0%, 18%, 22%, 25%, 53%, 57%, 100% {
+        text-shadow: 0 0 7px #fff,
+                     0 0 10px #fff,
+                     0 0 21px #fff,
+                     0 0 42px var(--primary),
+                     0 0 82px var(--primary),
+                     0 0 92px var(--primary),
+                     0 0 102px var(--primary);
+    }
+    20%, 24%, 55% {
+        text-shadow: none;
+    }
+}
+
+/* Page Transition */
+.page-transition {
+    animation: pageTransition 0.5s ease;
+}
+
+@keyframes pageTransition {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+    animation: backdropIn 0.3s ease;
+}
+
+@keyframes backdropIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Progress Bar Animation */
+@keyframes progressFill {
+    from { width: 0; }
+    to { width: var(--progress); }
+}

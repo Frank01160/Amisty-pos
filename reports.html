@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amisty POS - Reports</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/glow.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="reports.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <!-- Aurora Background -->
+    <div class="aurora-container">
+        <div class="aurora-wave"></div>
+        <div class="aurora-wave"></div>
+        <div class="aurora-wave"></div>
+    </div>
+
+    <!-- Particles -->
+    <div class="particles-container" id="particlesContainer"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1 class="header-title">Reports</h1>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-secondary" id="exportExcelButton">
+                📥 Export Excel
+            </button>
+            <button class="btn btn-primary" id="exportPdfButton">
+                📄 Export PDF
+            </button>
+            <button class="btn btn-outline" id="printReportButton">
+                🖨️ Print Report
+            </button>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-menu">
+            <a href="dashboard.html" class="sidebar-item">
+                <span class="sidebar-icon">📊</span>
+                <span class="sidebar-text">Dashboard</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="pos.html" class="sidebar-item">
+                <span class="sidebar-icon">🛒</span>
+                <span class="sidebar-text">POS Terminal</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="inventory.html" class="sidebar-item">
+                <span class="sidebar-icon">📦</span>
+                <span class="sidebar-text">Inventory</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="reports.html" class="sidebar-item active">
+                <span class="sidebar-icon">📈</span>
+                <span class="sidebar-text">Reports</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="settings.html" class="sidebar-item">
+                <span class="sidebar-icon">⚙️</span>
+                <span class="sidebar-text">Settings</span>
+                <span class="sidebar-glow"></span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Report Filters -->
+            <div class="card">
+                <div class="report-filters">
+                    <h3>📅 Transaction Report</h3>
+                    <div class="filter-row">
+                        <div class="form-group">
+                            <label class="form-label">From Date</label>
+                            <input type="date" id="dateFrom" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">To Date</label>
+                            <input type="date" id="dateTo" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select id="reportCategoryFilter" class="form-select">
+                                <option value="all">All Categories</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Payment Method</label>
+                            <select id="reportPaymentFilter" class="form-select">
+                                <option value="all">All Methods</option>
+                                <option value="cash">Cash</option>
+                                <option value="mobile">Mobile Money</option>
+                            </select>
+                        </div>
+                        <div class="form-group filter-actions">
+                            <label class="form-label">&nbsp;</label>
+                            <button class="btn btn-primary" id="applyFilters">🔍 Apply Filters</button>
+                            <button class="btn btn-outline" id="resetFilters">🔄 Reset</button>
+                        </div>
+                    </div>
+                    <!-- Quick Date Selectors -->
+                    <div class="quick-dates">
+                        <button class="btn btn-outline btn-sm date-quick" data-period="today">Today</button>
+                        <button class="btn btn-outline btn-sm date-quick" data-period="yesterday">Yesterday</button>
+                        <button class="btn btn-outline btn-sm date-quick" data-period="week">This Week</button>
+                        <button class="btn btn-outline btn-sm date-quick" data-period="month">This Month</button>
+                        <button class="btn btn-outline btn-sm date-quick" data-period="lastMonth">Last Month</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Summary Cards -->
+            <div class="stats-grid">
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-value" id="reportTotalSales">0.00</div>
+                        <div class="stat-label">Total Sales</div>
+                    </div>
+                </div>
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">🛒</div>
+                        <div class="stat-value" id="reportTransactionCount">0</div>
+                        <div class="stat-label">Transactions</div>
+                    </div>
+                </div>
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">💎</div>
+                        <div class="stat-value" id="reportTotalProfit">0.00</div>
+                        <div class="stat-label">Total Profit</div>
+                    </div>
+                </div>
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">🏷️</div>
+                        <div class="stat-value" id="reportTotalDiscount">0.00</div>
+                        <div class="stat-label">Total Discounts</div>
+                    </div>
+                </div>
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">💵</div>
+                        <div class="stat-value" id="reportCashSales">0.00</div>
+                        <div class="stat-label">Cash Sales</div>
+                    </div>
+                </div>
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">📱</div>
+                        <div class="stat-value" id="reportMobileSales">0.00</div>
+                        <div class="stat-label">Mobile Money Sales</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales by Category -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📊 Sales by Category</h3>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Items Sold</th>
+                                <th>Revenue</th>
+                                <th>Profit</th>
+                                <th>% of Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categorySalesTable">
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No data available</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top Products -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🔥 Top Selling Products</h3>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Quantity Sold</th>
+                                <th>Revenue</th>
+                                <th>Profit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topProductsReportTable">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No data available</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Detailed Transactions Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📋 Detailed Transactions</h3>
+                    <span class="badge badge-info" id="transactionCountBadge">0 transactions</span>
+                </div>
+                <div class="table-container">
+                    <table class="transactions-table" id="transactionsTable">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Receipt #</th>
+                                <th>Customer</th>
+                                <th>Products</th>
+                                <th>Qty</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                                <th>Discount</th>
+                                <th>Payment</th>
+                                <th>Seller</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTableBody">
+                            <tr>
+                                <td colspan="10" class="text-center text-muted">
+                                    Select date range and apply filters to view transactions
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="reportsPagination"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav show-mobile">
+        <a href="dashboard.html" class="mobile-nav-item">
+            <span class="nav-icon">📊</span><span>Dashboard</span>
+        </a>
+        <a href="pos.html" class="mobile-nav-item">
+            <span class="nav-icon">🛒</span><span>POS</span>
+        </a>
+        <a href="inventory.html" class="mobile-nav-item">
+            <span class="nav-icon">📦</span><span>Stock</span>
+        </a>
+        <a href="reports.html" class="mobile-nav-item active">
+            <span class="nav-icon">📈</span><span>Reports</span>
+        </a>
+        <a href="settings.html" class="mobile-nav-item">
+            <span class="nav-icon">⚙️</span><span>Settings</span>
+        </a>
+    </nav>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/reports-table.js"></script>
+    <script src="reports.js"></script>
+</body>
+</html>

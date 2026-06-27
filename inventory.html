@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amisty POS - Inventory Management</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/glow.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="inventory.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+    <!-- Aurora Background -->
+    <div class="aurora-container">
+        <div class="aurora-wave"></div>
+        <div class="aurora-wave"></div>
+        <div class="aurora-wave"></div>
+    </div>
+
+    <!-- Particles -->
+    <div class="particles-container" id="particlesContainer"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1 class="header-title">Inventory Management</h1>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-primary" id="addProductButton">
+                ➕ Add Product
+            </button>
+            <button class="btn btn-secondary" id="addCategoryButton">
+                📁 Add Category
+            </button>
+            <button class="btn btn-outline" id="stockAdjustButton">
+                🔄 Stock Adjustment
+            </button>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-menu">
+            <a href="dashboard.html" class="sidebar-item">
+                <span class="sidebar-icon">📊</span>
+                <span class="sidebar-text">Dashboard</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="pos.html" class="sidebar-item">
+                <span class="sidebar-icon">🛒</span>
+                <span class="sidebar-text">POS Terminal</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="inventory.html" class="sidebar-item active">
+                <span class="sidebar-icon">📦</span>
+                <span class="sidebar-text">Inventory</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="reports.html" class="sidebar-item">
+                <span class="sidebar-icon">📈</span>
+                <span class="sidebar-text">Reports</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="settings.html" class="sidebar-item">
+                <span class="sidebar-icon">⚙️</span>
+                <span class="sidebar-text">Settings</span>
+                <span class="sidebar-glow"></span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Inventory Stats -->
+            <div class="stats-grid">
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-value" id="totalProducts">0</div>
+                        <div class="stat-label">Total Products</div>
+                    </div>
+                </div>
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">📁</div>
+                        <div class="stat-value" id="totalCategories">0</div>
+                        <div class="stat-label">Categories</div>
+                    </div>
+                </div>
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-value" id="lowStockItems">0</div>
+                        <div class="stat-label">Low Stock Items</div>
+                    </div>
+                </div>
+                <div class="stat-card card-lift">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">💀</div>
+                        <div class="stat-value" id="deadStockItems">0</div>
+                        <div class="stat-label">Dead Stock (60+ days)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card">
+                <div class="inventory-filters">
+                    <div class="search-bar">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="inventorySearch" class="form-input" placeholder="Search inventory...">
+                    </div>
+                    <select id="inventoryCategoryFilter" class="form-select">
+                        <option value="all">All Categories</option>
+                    </select>
+                    <select id="inventoryStatusFilter" class="form-select">
+                        <option value="all">All Status</option>
+                        <option value="in-stock">In Stock</option>
+                        <option value="low-stock">Low Stock</option>
+                        <option value="out-of-stock">Out of Stock</option>
+                        <option value="dead-stock">Dead Stock</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Product List</h3>
+                    <span class="badge badge-info" id="productCount">0 items</span>
+                </div>
+                <div class="table-container">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Category</th>
+                                <th>Unit Type</th>
+                                <th>Stock</th>
+                                <th>Buying Price</th>
+                                <th>Selling Price</th>
+                                <th>Profit Margin</th>
+                                <th>Status</th>
+                                <th>Last Sold</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                            <tr>
+                                <td colspan="10" class="text-center text-muted">
+                                    <div class="shimmer" style="height: 40px;"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="inventoryPagination"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Product Modal -->
+    <div class="modal-overlay" id="productModal" style="display: none;">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title" id="productModalTitle">Add Product</h3>
+                <button class="modal-close" id="closeProductModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="productForm">
+                    <input type="hidden" id="productId">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Product Name *</label>
+                            <input type="text" id="productName" class="form-input" placeholder="e.g., Maize Meal" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category *</label>
+                            <div class="category-input-group">
+                                <select id="productCategory" class="form-select" required>
+                                    <option value="">Select Category</option>
+                                </select>
+                                <button type="button" class="btn btn-outline btn-sm" id="addNewCategoryBtn">+ New</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea id="productDescription" class="form-textarea" placeholder="Product description..."></textarea>
+                    </div>
+
+                    <!-- Unit Configuration -->
+                    <div class="form-group">
+                        <label class="form-label">Unit of Measurement *</label>
+                        <select id="unitType" class="form-select" required>
+                            <option value="">Select Unit Type</option>
+                            <option value="simple">Simple (Pieces, Bars, Packets, Litres)</option>
+                            <option value="ngunia-kg">Ngunia ↔ Kg (with conversion)</option>
+                            <option value="packet-items">Packet ↔ Single Items</option>
+                        </select>
+                    </div>
+
+                    <!-- Simple Unit -->
+                    <div id="simpleUnitSection" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Unit Name</label>
+                            <select id="simpleUnitName" class="form-select">
+                                <option value="pieces">Pieces</option>
+                                <option value="bars">Bars</option>
+                                <option value="packets">Packets</option>
+                                <option value="litres">Litres</option>
+                                <option value="grams">Grams</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Ngunia/Kg Conversion -->
+                    <div id="nguniaKgSection" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Number of Ngunias</label>
+                                <input type="number" id="nguniaCount" class="form-input" min="0" step="0.01" placeholder="Enter ngunias">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">OR Total Kg</label>
+                                <input type="number" id="totalKg" class="form-input" min="0" step="0.01" placeholder="Enter total kg">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kg per Ngunia *</label>
+                            <input type="number" id="kgPerNgunia" class="form-input" min="0.01" step="0.01" placeholder="e.g., 90">
+                        </div>
+                        <div class="conversion-preview" id="conversionPreview" style="display: none;">
+                            <span>📐 Conversion:</span>
+                            <span id="conversionText"></span>
+                        </div>
+                    </div>
+
+                    <!-- Packet/Items -->
+                    <div id="packetItemsSection" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Items per Packet *</label>
+                            <input type="number" id="itemsPerPacket" class="form-input" min="1" placeholder="e.g., 12">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Number of Packets</label>
+                                <input type="number" id="packetCount" class="form-input" min="0" step="0.01" placeholder="Enter packets">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">OR Single Items</label>
+                                <input type="number" id="singleItemCount" class="form-input" min="0" placeholder="Enter items">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Buying Price (per unit) *</label>
+                            <input type="number" id="buyingPrice" class="form-input" min="0" step="0.01" placeholder="0.00" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Selling Price (per unit) *</label>
+                            <input type="number" id="sellingPrice" class="form-input" min="0" step="0.01" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Low Stock Threshold</label>
+                            <input type="number" id="lowStockThreshold" class="form-input" min="0" placeholder="Alert when below...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Expiry Date (optional)</label>
+                            <input type="date" id="expiryDate" class="form-input">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelProduct">Cancel</button>
+                <button class="btn btn-primary" id="saveProduct">💾 Save Product</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Adjustment Modal -->
+    <div class="modal-overlay" id="stockAdjustModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Stock Adjustment</h3>
+                <button class="modal-close" id="closeStockModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="stockAdjustForm">
+                    <div class="form-group">
+                        <label class="form-label">Product *</label>
+                        <select id="adjustProduct" class="form-select" required>
+                            <option value="">Select Product</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Adjustment Type *</label>
+                        <select id="adjustType" class="form-select" required>
+                            <option value="add">➕ Add Stock</option>
+                            <option value="remove">➖ Remove Stock</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quantity *</label>
+                        <input type="number" id="adjustQuantity" class="form-input" min="0.01" step="0.01" required>
+                        <small id="adjustUnitLabel" class="text-muted"></small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reason *</label>
+                        <select id="adjustReason" class="form-select" required>
+                            <option value="">Select Reason</option>
+                            <option value="purchase">New Purchase</option>
+                            <option value="return">Customer Return</option>
+                            <option value="damage">Damaged</option>
+                            <option value="expired">Expired</option>
+                            <option value="theft">Theft</option>
+                            <option value="correction">Stock Correction</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="adjustNoteGroup" style="display: none;">
+                        <label class="form-label">Note</label>
+                        <textarea id="adjustNote" class="form-textarea" placeholder="Additional notes..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelAdjust">Cancel</button>
+                <button class="btn btn-primary" id="saveAdjust">✅ Save Adjustment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div class="modal-overlay" id="categoryModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Category</h3>
+                <button class="modal-close" id="closeCategoryModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    <div class="form-group">
+                        <label class="form-label">Category Name *</label>
+                        <input type="text" id="categoryName" class="form-input" placeholder="e.g., Feeds, Insecticides" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelCategory">Cancel</button>
+                <button class="btn btn-primary" id="saveCategory">✅ Add Category</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav show-mobile">
+        <a href="dashboard.html" class="mobile-nav-item">
+            <span class="nav-icon">📊</span><span>Dashboard</span>
+        </a>
+        <a href="pos.html" class="mobile-nav-item">
+            <span class="nav-icon">🛒</span><span>POS</span>
+        </a>
+        <a href="inventory.html" class="mobile-nav-item active">
+            <span class="nav-icon">📦</span><span>Stock</span>
+        </a>
+        <a href="reports.html" class="mobile-nav-item">
+            <span class="nav-icon">📈</span><span>Reports</span>
+        </a>
+        <a href="settings.html" class="mobile-nav-item">
+            <span class="nav-icon">⚙️</span><span>Settings</span>
+        </a>
+    </nav>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/offline.js"></script>
+    <script src="js/sound.js"></script>
+    <script src="inventory.js"></script>
+</body>
+</html>

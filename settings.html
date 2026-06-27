@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amisty POS - Settings</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/glow.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="settings.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+    <!-- Aurora Background -->
+    <div class="aurora-container">
+        <div class="aurora-wave"></div>
+        <div class="aurora-wave"></div>
+        <div class="aurora-wave"></div>
+    </div>
+
+    <!-- Particles -->
+    <div class="particles-container" id="particlesContainer"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1 class="header-title">Settings</h1>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-menu">
+            <a href="dashboard.html" class="sidebar-item">
+                <span class="sidebar-icon">📊</span>
+                <span class="sidebar-text">Dashboard</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="pos.html" class="sidebar-item">
+                <span class="sidebar-icon">🛒</span>
+                <span class="sidebar-text">POS Terminal</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="inventory.html" class="sidebar-item">
+                <span class="sidebar-icon">📦</span>
+                <span class="sidebar-text">Inventory</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="reports.html" class="sidebar-item">
+                <span class="sidebar-icon">📈</span>
+                <span class="sidebar-text">Reports</span>
+                <span class="sidebar-glow"></span>
+            </a>
+            <a href="settings.html" class="sidebar-item active">
+                <span class="sidebar-icon">⚙️</span>
+                <span class="sidebar-text">Settings</span>
+                <span class="sidebar-glow"></span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Settings Tabs -->
+            <div class="tabs">
+                <button class="tab active" data-tab="shop">🏪 Shop Profile</button>
+                <button class="tab" data-tab="receipt">🧾 Receipt Settings</button>
+                <button class="tab" data-tab="pos">🛒 POS Settings</button>
+                <button class="tab" data-tab="users">👥 User Management</button>
+                <button class="tab" data-tab="data">💾 Data Management</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Shop Profile Tab -->
+                <div class="tab-pane active" id="tab-shop">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Shop Information</h3>
+                        </div>
+                        <form id="shopProfileForm">
+                            <!-- Logo Upload -->
+                            <div class="form-group">
+                                <label class="form-label">Shop Logo</label>
+                                <div class="logo-upload-area">
+                                    <div class="logo-preview" id="logoPreview">
+                                        <img id="logoImage" src="assets/placeholder-logo.png" alt="Shop Logo">
+                                        <div class="logo-overlay">
+                                            <span>Click to change</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="logoInput" accept="image/*" style="display: none;">
+                                    <button type="button" class="btn btn-outline" id="uploadLogoBtn">📸 Upload Logo</button>
+                                    <button type="button" class="btn btn-outline btn-danger" id="removeLogoBtn" style="display: none;">🗑️ Remove</button>
+                                </div>
+                                <small class="text-muted">Recommended: Square image, max 2MB. Old logo will be auto-deleted.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Shop Name *</label>
+                                <input type="text" id="shopName" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Shop Address</label>
+                                <input type="text" id="shopAddress" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" id="shopPhone" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Currency</label>
+                                <select id="shopCurrency" class="form-select">
+                                    <option value="KES">KES - Kenyan Shilling</option>
+                                    <option value="USD">USD - US Dollar</option>
+                                    <option value="TZS">TZS - Tanzanian Shilling</option>
+                                    <option value="UGX">UGX - Ugandan Shilling</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Save Shop Profile</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Receipt Settings Tab -->
+                <div class="tab-pane" id="tab-receipt">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Receipt Customization</h3>
+                        </div>
+                        <form id="receiptSettingsForm">
+                            <div class="form-group">
+                                <label class="form-label">Receipt Number Prefix</label>
+                                <input type="text" id="receiptPrefix" class="form-input" placeholder="AMI-">
+                                <small class="text-muted">Example: AMI-2026-0001</small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Footer Text</label>
+                                <textarea id="receiptFooter" class="form-textarea" placeholder="Asante kwa kununua kwetu! Karibu tena!"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <input type="checkbox" id="showLogoOnReceipt" checked>
+                                    Show logo on receipt
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <input type="checkbox" id="showShopInfoOnReceipt" checked>
+                                    Show shop info (name, address, phone)
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Save Receipt Settings</button>
+                        </form>
+
+                        <!-- Receipt Preview -->
+                        <div class="receipt-preview-section">
+                            <h4>Receipt Preview</h4>
+                            <div class="receipt-preview-3inch" id="receiptPreview3inch">
+                                <div class="receipt-content">
+                                    <div class="receipt-logo" id="previewLogo">
+                                        <img src="assets/placeholder-logo.png" alt="Logo">
+                                    </div>
+                                    <div class="receipt-shop-name" id="previewShopName">My Shop</div>
+                                    <div class="receipt-shop-info" id="previewShopInfo">
+                                        <div>123 Main Street</div>
+                                        <div>Tel: +254 700 000000</div>
+                                    </div>
+                                    <div class="receipt-divider">------------------------------</div>
+                                    <div class="receipt-meta">
+                                        <div>Date: 27/06/2026 14:30</div>
+                                        <div>Receipt #: AMI-2026-0001</div>
+                                        <div>Seller: John</div>
+                                    </div>
+                                    <div class="receipt-divider">------------------------------</div>
+                                    <table class="receipt-items">
+                                        <thead>
+                                            <tr>
+                                                <th>Item</th>
+                                                <th>Qty</th>
+                                                <th>Price</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Maize (kg)</td>
+                                                <td>30</td>
+                                                <td>50</td>
+                                                <td>1,500</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Soap (bar)</td>
+                                                <td>0.5</td>
+                                                <td>100</td>
+                                                <td>50</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="receipt-divider">------------------------------</div>
+                                    <div class="receipt-totals">
+                                        <div>Subtotal: Ksh 1,550</div>
+                                        <div>Discount: Ksh 50</div>
+                                        <div class="receipt-total">TOTAL: Ksh 1,500</div>
+                                    </div>
+                                    <div class="receipt-divider">------------------------------</div>
+                                    <div class="receipt-payment">Payment: Cash</div>
+                                    <div class="receipt-divider">------------------------------</div>
+                                    <div class="receipt-footer-text" id="previewFooter">
+                                        Asante kwa kununua kwetu!<br>Karibu tena!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POS Settings Tab -->
+                <div class="tab-pane" id="tab-pos">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">POS Configuration</h3>
+                        </div>
+                        <form id="posSettingsForm">
+                            <div class="form-group">
+                                <label class="form-label">Quick Sale Buttons</label>
+                                <p class="text-muted">Select up to 5 products for quick access on POS</p>
+                                <div class="quick-sale-selector" id="quickSaleSelector">
+                                    <!-- Dynamic product checkboxes -->
+                                    <p class="text-muted">Loading products...</p>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <input type="checkbox" id="soundEnabled" checked>
+                                    Enable sound alerts
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <input type="checkbox" id="lowStockSoundEnabled" checked>
+                                    Low stock alert sound
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Save POS Settings</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- User Management Tab -->
+                <div class="tab-pane" id="tab-users">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">User Accounts</h3>
+                            <button class="btn btn-primary" id="addUserButton">➕ Add Seller</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Created</th>
+                                        <th>Last Login</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">Loading users...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Management Tab -->
+                <div class="tab-pane" id="tab-data">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Data Management</h3>
+                        </div>
+                        <div class="data-actions">
+                            <div class="data-action-card">
+                                <h4>📥 Export All Data</h4>
+                                <p>Download all your shop data as a backup file</p>
+                                <button class="btn btn-primary" id="exportAllData">📥 Export Data</button>
+                            </div>
+                            <div class="data-action-card">
+                                <h4>📤 Import Data</h4>
+                                <p>Restore from a previous backup</p>
+                                <input type="file" id="importDataFile" accept=".json" style="display: none;">
+                                <button class="btn btn-outline" id="importDataButton">📤 Import Data</button>
+                            </div>
+                            <div class="data-action-card danger">
+                                <h4>🗑️ Clear Old Transactions</h4>
+                                <p>Remove transactions older than 1 year to free space</p>
+                                <button class="btn btn-danger" id="clearOldTransactions">🗑️ Clear Old Data</button>
+                            </div>
+                            <div class="data-action-card danger">
+                                <h4>⚠️ Reset Shop</h4>
+                                <p>Delete all data and start fresh. This cannot be undone!</p>
+                                <button class="btn btn-danger" id="resetShop">⚠️ Reset Everything</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add User Modal -->
+    <div class="modal-overlay" id="userModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Seller Account</h3>
+                <button class="modal-close" id="closeUserModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="form-group">
+                        <label class="form-label">Seller Name *</label>
+                        <input type="text" id="newUserName" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" id="newUserEmail" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password *</label>
+                        <input type="password" id="newUserPassword" class="form-input" required minlength="6">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelAddUser">Cancel</button>
+                <button class="btn btn-primary" id="saveNewUser">✅ Add Seller</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">⚠️ Confirm Action</h3>
+                <button class="modal-close" id="closeConfirmModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelConfirm">Cancel</button>
+                <button class="btn btn-danger" id="confirmAction">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav show-mobile">
+        <a href="dashboard.html" class="mobile-nav-item">
+            <span class="nav-icon">📊</span><span>Dashboard</span>
+        </a>
+        <a href="pos.html" class="mobile-nav-item">
+            <span class="nav-icon">🛒</span><span>POS</span>
+        </a>
+        <a href="inventory.html" class="mobile-nav-item">
+            <span class="nav-icon">📦</span><span>Stock</span>
+        </a>
+        <a href="reports.html" class="mobile-nav-item">
+            <span class="nav-icon">📈</span><span>Reports</span>
+        </a>
+        <a href="settings.html" class="mobile-nav-item active">
+            <span class="nav-icon">⚙️</span><span>Settings</span>
+        </a>
+    </nav>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/offline.js"></script>
+    <script src="settings.js"></script>
+</body>
+</html>

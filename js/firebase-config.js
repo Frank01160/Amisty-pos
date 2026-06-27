@@ -6,19 +6,23 @@
 
 // Your Firebase configuration
 // Get these from Firebase Console > Project Settings > General > Your apps > Web app
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyDXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-    authDomain: "amisty-pos.firebaseapp.com",
-    projectId: "amisty-pos",
-    storageBucket: "amisty-pos.appspot.com",
-    messagingSenderId: "123456789012",
-    appId: "1:123456789012:web:abcdef1234567890abcdef",
-    measurementId: "G-XXXXXXXXXX"
+  apiKey: "AIzaSyDi3n9eFgPuGMOtY-0WSHoIW3TyDGwtvnA",
+  authDomain: "amisty-pos.firebaseapp.com",
+  projectId: "amisty-pos",
+  storageBucket: "amisty-pos.firebasestorage.app",
+  messagingSenderId: "129988160572",
+  appId: "1:129988160572:web:7eeed38145f0e4e80e6739"
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-
+const app = initializeApp(firebaseConfig);
 // Firebase service references
 const auth = firebase.auth();
 const db = firebase.firestore();

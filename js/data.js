@@ -280,7 +280,7 @@ class DataService {
 
     // ============ STORAGE (LOGO) ============
     
-    static async uploadLogo(file) {
+   /* static async uploadLogo(file) {
         try {
             // Delete old logo first
             const oldFiles = await logosStorageRef.listAll();
@@ -312,4 +312,4 @@ class DataService {
             return { success: false, message: error.message };
         }
     }
-}
+} */ 

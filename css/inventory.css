@@ -1,0 +1,75 @@
+/* ============================================
+   AMISTY POS - INVENTORY STYLES
+   ============================================ */
+
+.inventory-filters {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.inventory-filters .search-bar {
+    flex: 1;
+    min-width: 200px;
+}
+
+.inventory-filters .form-select {
+    width: 200px;
+}
+
+/* Inventory Table */
+.inventory-table {
+    font-size: 13px;
+}
+
+.inventory-table td {
+    vertical-align: middle;
+}
+
+.inventory-table .btn {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.category-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.category-input-group .form-select {
+    flex: 1;
+}
+
+/* Conversion Preview */
+.conversion-preview {
+    padding: 12px;
+    background: rgba(0, 242, 254, 0.1);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    border-radius: 8px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #00F2FE;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .inventory-filters {
+        flex-direction: column;
+    }
+    .inventory-filters .form-select {
+        width: 100%;
+    }
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}

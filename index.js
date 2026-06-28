@@ -6,9 +6,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Create particles
     createParticles();
     
-    // Check if already logged in
+    // Init auth (but DON'T redirect - we're on login page)
     Auth.init();
     
+    // If already logged in, Auth.init will redirect to dashboard
+    // If not logged in, stay here
+    
+    // DOM Elements
+    const loginForm = document.getElementById('loginForm');
+    // ... rest stays the same
     // DOM Elements
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');

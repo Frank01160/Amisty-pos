@@ -246,26 +246,42 @@ class DataService {
 
     // ============ SETTINGS ============
     
-    static async getSettings() {
-        try {
-            const doc = await settingsCollection.doc('shop').get();
-            return doc.exists ? doc.data() : {};
-        } catch (error) {
-            return {};
+  // ============ SETTINGS ============
+static async getSettings() {
+    try {
+        const doc = await settingsCollection.doc('shop').get();
+        if (doc.exists) {
+            return doc.data();
+        } else {
+            // Create default settings if none exist
+            const defaultSettings = {
+                shopName: 'My Shop',
+                address: '',
+                phone: '',
+                logoUrl: '',
+                receiptFooter: 'Asante kwa kununua kwetu! Karibu tena!',
+                receiptPrefix: 'AMI-',
+                currency: 'KES',
+                soundEnabled: true,
+                lowStockSoundEnabled: true,
+                quickSaleProductIds: [],
+                showLogoOnReceipt: true,
+                showShopInfoOnReceipt: true,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await settingsCollection.doc('shop').set(defaultSettings);
+            return defaultSettings;
         }
+    } catch (error) {
+        console.error('Settings error:', error);
+        return {
+            shopName: 'My Shop',
+            receiptFooter: 'Asante kwa kununua kwetu!',
+            receiptPrefix: 'AMI-',
+            currency: 'KES'
+        };
     }
-
-    static async updateSettings(settingsData) {
-        try {
-            await settingsCollection.doc('shop').update({
-                ...settingsData,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            return { success: true };
-        } catch (error) {
-            return { success: false, message: error.message };
-        }
-    }
+}
 
     // ============ USERS ============
     

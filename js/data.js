@@ -1,23 +1,13 @@
 // ============================================
-// AMISTY POS - DATA OPERATIONS (CRUD)
+// AMISTY POS - DATA OPERATIONS
 // ============================================
 
 class DataService {
-    // ============ PRODUCTS ============
     
-    static async getProducts(filters = {}) {
+    // ============ PRODUCTS ============
+    static async getProducts() {
         try {
-            let query = productsCollection;
-            
-            if (filters.category && filters.category !== 'all') {
-                query = query.where('category', '==', filters.category);
-            }
-            
-            if (filters.status === 'low-stock') {
-                query = query.where('stockInBaseUnit', '<=', firebase.firestore.FieldValue);
-            }
-            
-            const snapshot = await query.orderBy('name').get();
+            const snapshot = await productsCollection.orderBy('name').get();
             return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } catch (error) {
             console.error('Error fetching products:', error);
@@ -30,7 +20,6 @@ class DataService {
             const doc = await productsCollection.doc(productId).get();
             return doc.exists ? { id: doc.id, ...doc.data() } : null;
         } catch (error) {
-            console.error('Error fetching product:', error);
             return null;
         }
     }
@@ -69,30 +58,23 @@ class DataService {
         }
     }
 
-    static async updateStock(productId, quantity, type = 'sale') {
+    static async updateStock(productId, quantity, type) {
         try {
             const product = await this.getProduct(productId);
-            if (!product) return { success: false, message: 'Product not found' };
+            if (!product) return { success: false };
             
-            let newStock = product.stockInBaseUnit - quantity;
-            if (type === 'add') newStock = product.stockInBaseUnit + quantity;
+            let newStock = product.stockInBaseUnit || 0;
+            if (type === 'add') {
+                newStock += quantity;
+            } else {
+                newStock -= quantity;
+            }
             if (newStock < 0) newStock = 0;
             
             await productsCollection.doc(productId).update({
                 stockInBaseUnit: newStock,
                 lastSoldDate: type === 'sale' ? firebase.firestore.FieldValue.serverTimestamp() : product.lastSoldDate,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            // Log stock history
-            await stockHistoryCollection.add({
-                productId,
-                productName: product.name,
-                type,
-                quantityChange: type === 'sale' ? -quantity : quantity,
-                newStock,
-                dateTime: firebase.firestore.FieldValue.serverTimestamp(),
-                userId: auth.currentUser?.uid || 'system'
             });
             
             return { success: true, newStock };
@@ -103,44 +85,39 @@ class DataService {
 
     static async getLowStockProducts() {
         try {
-            const snapshot = await productsCollection.get();
-            return snapshot.docs
-                .map(doc => ({ id: doc.id, ...doc.data() }))
-                .filter(p => p.stockInBaseUnit <= (p.lowStockThreshold || 10) && p.stockInBaseUnit > 0);
+            const products = await this.getProducts();
+            return products.filter(p => {
+                const threshold = p.lowStockThreshold || 10;
+                return p.stockInBaseUnit > 0 && p.stockInBaseUnit <= threshold;
+            });
         } catch (error) {
             return [];
         }
     }
 
-    static async getDeadStock(days = 60) {
+    static async getDeadStock(days) {
         try {
             const cutoff = new Date();
-            cutoff.setDate(cutoff.getDate() - days);
-            
-            const snapshot = await productsCollection
-                .where('stockInBaseUnit', '>', 0)
-                .get();
-            
-            return snapshot.docs
-                .map(doc => ({ id: doc.id, ...doc.data() }))
-                .filter(p => {
-                    if (!p.lastSoldDate) return true;
-                    return p.lastSoldDate.toDate() < cutoff;
-                });
+            cutoff.setDate(cutoff.getDate() - (days || 60));
+            const products = await this.getProducts();
+            return products.filter(p => {
+                if (p.stockInBaseUnit <= 0) return false;
+                if (!p.lastSoldDate) return true;
+                return p.lastSoldDate.toDate() < cutoff;
+            });
         } catch (error) {
             return [];
         }
     }
 
     // ============ TRANSACTIONS ============
-    
     static async saveTransaction(transactionData) {
         try {
             const docRef = await transactionsCollection.add({
                 ...transactionData,
                 dateTime: firebase.firestore.FieldValue.serverTimestamp(),
-                sellerId: auth.currentUser?.uid || 'unknown',
-                sellerName: Auth.userName || 'Unknown'
+                sellerId: auth.currentUser ? auth.currentUser.uid : 'unknown',
+                sellerName: 'Admin'
             });
             return { success: true, id: docRef.id };
         } catch (error) {
@@ -148,40 +125,47 @@ class DataService {
         }
     }
 
-    static async getTransactions(filters = {}, page = 1, limit = 20) {
+    static async getTransactions(filters, page, limit) {
         try {
             let query = transactionsCollection.orderBy('dateTime', 'desc');
             
-            if (filters.dateFrom) {
+            if (filters && filters.dateFrom) {
                 query = query.where('dateTime', '>=', filters.dateFrom);
             }
-            if (filters.dateTo) {
+            if (filters && filters.dateTo) {
                 query = query.where('dateTime', '<=', filters.dateTo);
             }
-            if (filters.paymentMethod && filters.paymentMethod !== 'all') {
-                query = query.where('paymentMethod', '==', filters.paymentMethod);
+            
+            const snapshot = await query.get();
+            
+            let transactions = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data,
+                    dateTime: data.dateTime ? data.dateTime.toDate() : new Date()
+                };
+            });
+            
+            // Client-side filters
+            if (filters) {
+                if (filters.paymentMethod && filters.paymentMethod !== 'all') {
+                    transactions = transactions.filter(t => t.paymentMethod === filters.paymentMethod);
+                }
+                if (filters.category && filters.category !== 'all') {
+                    transactions = transactions.filter(t => 
+                        t.items && t.items.some(item => item.category === filters.category)
+                    );
+                }
             }
             
-            const snapshot = await query.limit(limit * page).get();
+            const total = transactions.length;
+            const pageNum = page || 1;
+            const pageLimit = limit || 20;
+            const start = (pageNum - 1) * pageLimit;
+            const paginated = transactions.slice(start, start + pageLimit);
             
-            let transactions = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                dateTime: doc.data().dateTime?.toDate() || new Date()
-            }));
-            
-            // Filter by category if needed (client-side)
-            if (filters.category && filters.category !== 'all') {
-                transactions = transactions.filter(t => 
-                    t.items?.some(item => item.category === filters.category)
-                );
-            }
-            
-            // Paginate
-            const start = (page - 1) * limit;
-            const paginated = transactions.slice(start, start + limit);
-            
-            return { transactions: paginated, total: transactions.length };
+            return { transactions: paginated, total };
         } catch (error) {
             console.error('Error fetching transactions:', error);
             return { transactions: [], total: 0 };
@@ -216,13 +200,11 @@ class DataService {
             
             return stats;
         } catch (error) {
-            console.error('Error fetching stats:', error);
             return { totalSales: 0, totalTransactions: 0, totalProfit: 0, totalDiscount: 0, cashSales: 0, mobileSales: 0 };
         }
     }
 
     // ============ CATEGORIES ============
-    
     static async getCategories() {
         try {
             const snapshot = await categoriesCollection.orderBy('name').get();
@@ -245,16 +227,14 @@ class DataService {
     }
 
     // ============ SETTINGS ============
-    
-  // ============ SETTINGS ============
-static async getSettings() {
-    try {
-        const doc = await settingsCollection.doc('shop').get();
-        if (doc.exists) {
-            return doc.data();
-        } else {
-            // Create default settings if none exist
-            const defaultSettings = {
+    static async getSettings() {
+        try {
+            const doc = await settingsCollection.doc('shop').get();
+            if (doc.exists) {
+                return doc.data();
+            }
+            // Create defaults
+            const defaults = {
                 shopName: 'My Shop',
                 address: '',
                 phone: '',
@@ -264,27 +244,34 @@ static async getSettings() {
                 currency: 'KES',
                 soundEnabled: true,
                 lowStockSoundEnabled: true,
-                quickSaleProductIds: [],
                 showLogoOnReceipt: true,
                 showShopInfoOnReceipt: true,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                quickSaleProductIds: []
             };
-            await settingsCollection.doc('shop').set(defaultSettings);
-            return defaultSettings;
+            await settingsCollection.doc('shop').set(defaults);
+            return defaults;
+        } catch (error) {
+            console.error('Settings error:', error);
+            return { shopName: 'My Shop', receiptPrefix: 'AMI-', currency: 'KES' };
         }
-    } catch (error) {
-        console.error('Settings error:', error);
-        return {
-            shopName: 'My Shop',
-            receiptFooter: 'Asante kwa kununua kwetu!',
-            receiptPrefix: 'AMI-',
-            currency: 'KES'
-        };
     }
-}
+
+    static async updateSettings(data) {
+        try {
+            await settingsCollection.doc('shop').update(data);
+            return { success: true };
+        } catch (error) {
+            // If doc doesn't exist, create it
+            try {
+                await settingsCollection.doc('shop').set(data);
+                return { success: true };
+            } catch (e) {
+                return { success: false, message: e.message };
+            }
+        }
+    }
 
     // ============ USERS ============
-    
     static async getUsers() {
         try {
             const snapshot = await usersCollection.orderBy('createdAt', 'desc').get();
@@ -294,24 +281,18 @@ static async getSettings() {
         }
     }
 
-    // ============ STORAGE (LOGO) ============
-    
-   /* static async uploadLogo(file) {
+    // ============ LOGO (Base64) ============
+    static async uploadLogo(file) {
         try {
-            // Delete old logo first
-            const oldFiles = await logosStorageRef.listAll();
-            const deletePromises = oldFiles.items.map(item => item.delete());
-            await Promise.all(deletePromises);
-            
-            // Upload new logo
-            const fileRef = logosStorageRef.child(`logo_${Date.now()}_${file.name}`);
-            await fileRef.put(file);
-            const url = await fileRef.getDownloadURL();
-            
-            // Update settings
-            await this.updateSettings({ logoUrl: url });
-            
-            return { success: true, url };
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const base64 = e.target.result;
+                    await this.updateSettings({ logoUrl: base64 });
+                    resolve({ success: true, url: base64 });
+                };
+                reader.readAsDataURL(file);
+            });
         } catch (error) {
             return { success: false, message: error.message };
         }
@@ -319,13 +300,10 @@ static async getSettings() {
 
     static async deleteLogo() {
         try {
-            const oldFiles = await logosStorageRef.listAll();
-            const deletePromises = oldFiles.items.map(item => item.delete());
-            await Promise.all(deletePromises);
             await this.updateSettings({ logoUrl: '' });
             return { success: true };
         } catch (error) {
-            return { success: false, message: error.message };
+            return { success: false };
         }
     }
-} */ 
+}

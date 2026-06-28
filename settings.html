@@ -299,6 +299,37 @@
                         </div>
                     </div>
                 </div>
+                <!-- Account Tab -->
+<div class="tab-pane" id="tab-account">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Account Settings</h3>
+        </div>
+        <form id="accountForm">
+            <div class="form-group">
+                <label class="form-label">Current Email</label>
+                <input type="email" id="currentEmail" class="form-input" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">New Email</label>
+                <input type="email" id="newEmail" class="form-input" placeholder="Enter new email">
+            </div>
+            <button type="button" class="btn btn-primary" id="changeEmailBtn">📧 Change Email</button>
+            
+            <hr style="margin: 25px 0; border-color: rgba(255,255,255,0.1);">
+            
+            <div class="form-group">
+                <label class="form-label">New Password</label>
+                <input type="password" id="newPassword" class="form-input" placeholder="Min 6 characters" minlength="6">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirm New Password</label>
+                <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm password">
+            </div>
+            <button type="button" class="btn btn-warning" id="changePasswordBtn">🔒 Change Password</button>
+        </form>
+    </div>
+</div>
 
                 <!-- Data Management Tab -->
                 <div class="tab-pane" id="tab-data">

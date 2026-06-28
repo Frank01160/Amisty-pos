@@ -1,73 +1,92 @@
 // ============================================
-// AMISTY POS - AUTHENTICATION
+// AMISTY POS - SIMPLE AUTHENTICATION
 // ============================================
+
+// Default admin credentials (change after first login)
+const DEFAULT_EMAIL = "admin@amisty.com";
+const DEFAULT_PASSWORD = "admin123";
 
 class Auth {
     static currentUser = null;
-    static userRole = null;
+    static userRole = 'manager';
     static logoutTimer = null;
 
-    // Check auth state
     static init() {
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 this.currentUser = user;
-                await this.loadUserData(user.uid);
+                this.userRole = 'manager';
                 this.startAutoLogout();
                 
                 // Redirect if on login page
-                if (window.location.pathname.includes('index.html') || 
-                    window.location.pathname === '/' ||
-                    window.location.pathname === '') {
-                    this.redirectBasedOnRole();
+                const currentPage = window.location.pathname.split('/').pop();
+                if (currentPage === 'index.html' || currentPage === '' || currentPage === '/') {
+                    window.location.href = 'dashboard.html';
                 }
             } else {
                 this.currentUser = null;
                 this.userRole = null;
-                // Redirect to login if not already there
-                if (!window.location.pathname.includes('index.html')) {
+                const currentPage = window.location.pathname.split('/').pop();
+                if (currentPage !== 'index.html' && currentPage !== '' && currentPage !== '/') {
                     window.location.href = 'index.html';
                 }
             }
         });
     }
 
-    // Load user data from Firestore
-    static async loadUserData(uid) {
-        try {
-            const doc = await usersCollection.doc(uid).get();
-            if (doc.exists) {
-                const userData = doc.data();
-                this.userRole = userData.role;
-                this.userName = userData.name;
-                this.userEmail = userData.email;
-                
-                // Update last login
-                await usersCollection.doc(uid).update({
-                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            }
-        } catch (error) {
-            console.error('Error loading user data:', error);
-        }
-    }
-
-    // Login
     static async login(email, password) {
         try {
-            const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            return { success: true, user: userCredential.user };
+            // Check if this is first login with default credentials
+            if (email === DEFAULT_EMAIL && password === DEFAULT_PASSWORD) {
+                // Try to sign in
+                try {
+                    await auth.signInWithEmailAndPassword(email, password);
+                } catch (e) {
+                    // If user doesn't exist, create default admin
+                    if (e.code === 'auth/user-not-found') {
+                        await auth.createUserWithEmailAndPassword(email, password);
+                        await usersCollection.doc(auth.currentUser.uid).set({
+                            name: 'Admin',
+                            email: email,
+                            role: 'manager',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        await settingsCollection.doc('shop').set({
+                            shopName: 'My Shop',
+                            address: '',
+                            phone: '',
+                            logoUrl: '',
+                            receiptFooter: 'Asante kwa kununua kwetu! Karibu tena!',
+                            receiptPrefix: 'AMI-',
+                            currency: 'KES',
+                            soundEnabled: true,
+                            quickSaleProductIds: [],
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    } else {
+                        throw e;
+                    }
+                }
+            } else {
+                // Normal login
+                await auth.signInWithEmailAndPassword(email, password);
+            }
+            
+            return { success: true };
         } catch (error) {
             let message = 'Login failed';
             switch (error.code) {
                 case 'auth/user-not-found':
-                    message = 'No account found with this email';
+                    message = 'Invalid email or password';
                     break;
                 case 'auth/wrong-password':
-                    message = 'Incorrect password';
+                    message = 'Invalid email or password';
                     break;
                 case 'auth/invalid-email':
                     message = 'Invalid email address';
+                    break;
+                case 'auth/too-many-requests':
+                    message = 'Too many attempts. Try again later.';
                     break;
                 default:
                     message = error.message;
@@ -76,109 +95,50 @@ class Auth {
         }
     }
 
-    // Logout
     static async logout() {
-        try {
-            this.clearLogoutTimer();
-            await auth.signOut();
-            window.location.href = 'index.html';
-        } catch (error) {
-            console.error('Logout error:', error);
-        }
+        this.clearLogoutTimer();
+        await auth.signOut();
+        window.location.href = 'index.html';
     }
 
-    // Register manager (setup wizard)
-    static async registerManager(name, email, password, shopData) {
+    static async changePassword(newPassword) {
         try {
-            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-            const uid = userCredential.user.uid;
-            
-            // Create user document
-            await usersCollection.doc(uid).set({
-                name: name,
-                email: email,
-                role: 'manager',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            // Create shop settings
-            await settingsCollection.doc('shop').set({
-                shopName: shopData.shopName,
-                address: shopData.address || '',
-                phone: shopData.phone || '',
-                logoUrl: '',
-                receiptFooter: shopData.footer || 'Asante kwa kununua kwetu! Karibu tena!',
-                receiptPrefix: shopData.prefix || 'AMI-',
-                currency: shopData.currency || 'KES',
-                soundEnabled: true,
-                lowStockSoundEnabled: true,
-                quickSaleProductIds: [],
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            return { success: true };
-        } catch (error) {
-            let message = 'Registration failed';
-            if (error.code === 'auth/email-already-in-use') {
-                message = 'Email already registered';
+            const user = auth.currentUser;
+            if (user) {
+                await user.updatePassword(newPassword);
+                return { success: true };
             }
-            return { success: false, message };
-        }
-    }
-
-    // Add seller account
-    static async addSeller(name, email, password) {
-        try {
-            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-            const uid = userCredential.user.uid;
-            
-            await usersCollection.doc(uid).set({
-                name: name,
-                email: email,
-                role: 'seller',
-                createdBy: this.currentUser.uid,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastLogin: null
-            });
-            
-            // Sign back in as manager
-            await auth.signInWithEmailAndPassword(this.currentUser.email, '');
-            
-            return { success: true };
+            return { success: false, message: 'Not logged in' };
         } catch (error) {
             return { success: false, message: error.message };
         }
     }
 
-    // Delete user
-    static async deleteUser(uid) {
+    static async changeEmail(newEmail) {
         try {
-            await usersCollection.doc(uid).delete();
-            return { success: true };
+            const user = auth.currentUser;
+            if (user) {
+                await user.updateEmail(newEmail);
+                // Update in Firestore
+                await usersCollection.doc(user.uid).update({ email: newEmail });
+                return { success: true };
+            }
+            return { success: false, message: 'Not logged in' };
         } catch (error) {
             return { success: false, message: error.message };
         }
     }
 
-    // Auto logout
     static startAutoLogout() {
         this.clearLogoutTimer();
-        
-        const timeout = this.userRole === 'manager' ? 15 * 60 * 1000 : 60 * 60 * 1000;
-        
         this.logoutTimer = setTimeout(() => {
-            this.promptExtendSession();
-        }, timeout - 60000); // Warn 1 minute before
-    }
-
-    static promptExtendSession() {
-        const extend = confirm('Your session is about to expire. Click OK to stay logged in.');
-        if (extend) {
-            this.startAutoLogout();
-        } else {
-            this.logout();
-        }
+            const extend = confirm('Session expiring. Stay logged in?');
+            if (extend) {
+                this.startAutoLogout();
+            } else {
+                this.logout();
+            }
+        }, 55 * 60 * 1000); // 55 minutes
     }
 
     static clearLogoutTimer() {
@@ -188,41 +148,15 @@ class Auth {
         }
     }
 
-    // Check if user is manager
     static isManager() {
-        return this.userRole === 'manager';
+        return true;
     }
 
-    // Check if user is seller
-    static isSeller() {
-        return this.userRole === 'seller';
-    }
-
-    // Redirect based on role
-    static redirectBasedOnRole() {
-        const currentPage = window.location.pathname.split('/').pop();
-        
-        if (this.isSeller()) {
-            // Sellers can only access POS and Reports
-            const allowedPages = ['pos.html', 'reports.html'];
-            if (!allowedPages.includes(currentPage) && currentPage !== '') {
-                window.location.href = 'pos.html';
-            }
-        }
-    }
-
-    // Protect page - call on each page load
-    static protectPage(allowedRoles = ['manager', 'seller']) {
+    static protectPage() {
         if (!this.currentUser) {
             window.location.href = 'index.html';
             return false;
         }
-        
-        if (!allowedRoles.includes(this.userRole)) {
-            window.location.href = this.isManager() ? 'dashboard.html' : 'pos.html';
-            return false;
-        }
-        
         return true;
     }
 }

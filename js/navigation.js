@@ -67,22 +67,15 @@ class Navigation {
                 }
             });
         }
-    }
-
-    static initUserMenu() {
-        const avatar = document.getElementById('userAvatar');
-        const dropdown = document.getElementById('userDropdown');
-        
-        if (avatar && dropdown) {
-            avatar.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdown.classList.toggle('show');
-            });
-            
-            document.addEventListener('click', () => {
-                dropdown.classList.remove('show');
-            });
-        }
+    }static initUserMenu() {
+    const userInitial = document.getElementById('userInitial');
+    const userName = document.getElementById('userName');
+    const userEmail = document.getElementById('userEmail');
+    
+    if (userInitial) userInitial.textContent = 'A';
+    if (userName) userName.textContent = 'Admin';
+    if (userEmail && Auth.currentUser) userEmail.textContent = Auth.currentUser.email;
+}
         
         // Set user info
         const userInitial = document.getElementById('userInitial');

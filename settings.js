@@ -19,7 +19,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadAllSettings();
     
     // Setup listeners
-    setupSettingsListeners();
+    setupSettingsListeners(
+        
+    );
+    // Account settings
+document.getElementById('currentEmail').value = Auth.currentUser?.email || '';
+document.getElementById('changeEmailBtn').addEventListener('click', changeEmail);
+document.getElementById('changePasswordBtn').addEventListener('click', changePassword);
 });
 
 async function loadAllSettings() {
@@ -310,5 +316,52 @@ async function resetShop() {
         if (doubleConfirm) {
             Utils.showToast('Shop reset feature requires additional implementation for safety.', 'warning');
         }
+    }
+}
+async function changeEmail() {
+    const newEmail = document.getElementById('newEmail').value.trim();
+    if (!newEmail) {
+        Utils.showToast('Please enter a new email', 'error');
+        return;
+    }
+    
+    const confirmed = await Utils.confirmAction(`Change email to ${newEmail}? You'll need to login again.`);
+    if (!confirmed) return;
+    
+    const result = await Auth.changeEmail(newEmail);
+    if (result.success) {
+        document.getElementById('currentEmail').value = newEmail;
+        Utils.showToast('Email changed! Please login again.', 'success');
+        setTimeout(() => Auth.logout(), 2000);
+    } else {
+        Utils.showToast(result.message, 'error');
+    }
+}
+
+async function changePassword() {
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (!newPassword || newPassword.length < 6) {
+        Utils.showToast('Password must be at least 6 characters', 'error');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        Utils.showToast('Passwords do not match', 'error');
+        return;
+    }
+    
+    const confirmed = await Utils.confirmAction('Change your password? You\'ll need to login again.');
+    if (!confirmed) return;
+    
+    const result = await Auth.changePassword(newPassword);
+    if (result.success) {
+        Utils.showToast('Password changed! Please login again.', 'success');
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        setTimeout(() => Auth.logout(), 2000);
+    } else {
+        Utils.showToast(result.message, 'error');
     }
 }

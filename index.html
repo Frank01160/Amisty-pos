@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amisty POS - Login</title>
     
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- CSS Files -->
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/glow.css">
@@ -18,196 +16,115 @@
     <link rel="stylesheet" href="css/mobile.css">
     <link rel="stylesheet" href="index.css">
     
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <!-- Aurora Background -->
-    <div class="aurora-container" id="auroraContainer">
-        <div class="aurora-wave"></div>
-        <div class="aurora-wave"></div>
-        <div class="aurora-wave"></div>
+    <!-- Floating Orbs Background -->
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
     </div>
 
     <!-- Floating Particles -->
     <div class="particles-container" id="particlesContainer"></div>
 
-    <!-- Main Login Container -->
-    <div class="login-wrapper">
-        <div class="login-container rotating-border">
-            <div class="login-inner">
-                <!-- Logo & Brand -->
-                <div class="login-brand">
-                    <div class="brand-logo">
-                        <div class="logo-circle">
-                            <span class="logo-text">A</span>
-                        </div>
+    <!-- Main Container -->
+    <div class="login-page">
+        <!-- Floating Card -->
+        <div class="floating-card">
+            <div class="card-shine"></div>
+            
+            <!-- Logo Section -->
+            <div class="card-logo">
+                <div class="logo-ring">
+                    <div class="logo-inner">
+                        <span class="logo-letter">A</span>
                     </div>
-                    <h1 class="brand-name neon-text">AMISTY POS</h1>
-                    <p class="brand-tagline">Smart Solutions for Small Business</p>
+                </div>
+            </div>
+
+            <!-- Brand -->
+            <div class="card-brand">
+                <h1 class="brand-title">Amisty POS</h1>
+                <p class="brand-sub">Smart Business Management</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="login-form">
+                <div class="input-group">
+                    <div class="input-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        class="input-field" 
+                        placeholder="Email Address"
+                        required
+                        autocomplete="email"
+                    >
                 </div>
 
-                <!-- Login Form -->
-                <form id="loginForm" class="login-form">
-                    <div class="form-group">
-                        <label class="form-label" for="email">
-                            <span class="label-icon">📧</span> Email Address
-                        </label>
-                        <div class="input-wrapper">
-                            <input 
-                                type="email" 
-                                id="email" 
-                                class="form-input glow-input" 
-                                placeholder="Enter your email"
-                                required
-                                autocomplete="email"
-                            >
-                            <span class="input-focus-border"></span>
-                        </div>
+                <div class="input-group">
+                    <div class="input-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
                     </div>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="input-field" 
+                        placeholder="Password"
+                        required
+                        autocomplete="current-password"
+                    >
+                    <button type="button" class="toggle-password" id="passwordToggle">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
 
-                    <div class="form-group">
-                        <label class="form-label" for="password">
-                            <span class="label-icon">🔒</span> Password
-                        </label>
-                        <div class="input-wrapper">
-                            <input 
-                                type="password" 
-                                id="password" 
-                                class="form-input glow-input" 
-                                placeholder="Enter your password"
-                                required
-                                autocomplete="current-password"
-                            >
-                            <button type="button" class="password-toggle" id="passwordToggle">
-                                👁️
-                            </button>
-                            <span class="input-focus-border"></span>
-                        </div>
-                    </div>
+                <!-- Error Message -->
+                <div class="error-box" id="errorMessage" style="display: none;">
+                    <span class="error-icon">⚠️</span>
+                    <span class="error-text"></span>
+                </div>
 
-                    <!-- Error Message -->
-                    <div class="error-message" id="errorMessage" style="display: none;">
-                        <span class="error-icon">⚠️</span>
-                        <span class="error-text"></span>
-                    </div>
-
-                    <!-- Login Button -->
-                    <button type="submit" class="btn btn-primary btn-lg btn-full glow-btn ripple" id="loginButton">
+                <!-- Login Button -->
+                <button type="submit" class="login-btn" id="loginButton">
+                    <span class="btn-content">
                         <span class="btn-text">Sign In</span>
-                        <span class="btn-loader" style="display: none;">
-                            <span class="spinner-small"></span>
-                        </span>
-                    </button>
-                </form>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                    <span class="btn-loader" style="display: none;">
+                        <span class="loader-dot"></span>
+                    </span>
+                </button>
+            </form>
 
-                <!-- Setup Wizard Link -->
-                <div class="setup-link" id="setupSection" style="display: none;">
-                    <div class="divider">
-                        <span>First time?</span>
-                    </div>
-                    <button class="btn btn-outline btn-full" id="setupButton">
-                        🚀 Setup Your Shop
-                    </button>
-                </div>
-
-                <!-- Footer -->
-                <div class="login-footer">
-                    <p>&copy; 2026 Amisty POS. All rights reserved.</p>
-                </div>
-            </div>
+            <!-- Hint -->
+            <p class="login-hint">Default: admin@amisty.com / admin123</p>
         </div>
+
+        <!-- Footer -->
+        <p class="page-footer">&copy; 2026 Amisty POS</p>
     </div>
 
-    <!-- Setup Wizard Modal -->
-    <div class="modal-overlay" id="setupModal" style="display: none;">
-        <div class="modal modal-lg">
-            <div class="modal-header">
-                <h2 class="modal-title">🚀 Shop Setup Wizard</h2>
-                <button class="modal-close" id="closeSetupModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="setupForm">
-                    <div class="setup-steps">
-                        <!-- Step 1: Basic Info -->
-                        <div class="setup-step active" data-step="1">
-                            <h3>Step 1: Shop Information</h3>
-                            <div class="form-group">
-                                <label class="form-label">Shop Name *</label>
-                                <input type="text" id="setupShopName" class="form-input" placeholder="My Shop Name" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Shop Address</label>
-                                <input type="text" id="setupAddress" class="form-input" placeholder="123 Main Street">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Phone Number</label>
-                                <input type="tel" id="setupPhone" class="form-input" placeholder="+254 700 000000">
-                            </div>
-                        </div>
-
-                        <!-- Step 2: Admin Account -->
-                        <div class="setup-step" data-step="2">
-                            <h3>Step 2: Admin Account</h3>
-                            <div class="form-group">
-                                <label class="form-label">Admin Email *</label>
-                                <input type="email" id="setupEmail" class="form-input" placeholder="admin@shop.com" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Password *</label>
-                                <input type="password" id="setupPassword" class="form-input" placeholder="Min 6 characters" required minlength="6">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Confirm Password *</label>
-                                <input type="password" id="setupConfirmPassword" class="form-input" placeholder="Confirm password" required>
-                            </div>
-                        </div>
-
-                        <!-- Step 3: Receipt Setup -->
-                        <div class="setup-step" data-step="3">
-                            <h3>Step 3: Receipt Settings</h3>
-                            <div class="form-group">
-                                <label class="form-label">Receipt Footer Text</label>
-                                <input type="text" id="setupFooter" class="form-input" placeholder="Asante kwa kununua kwetu! Karibu tena!" value="Asante kwa kununua kwetu! Karibu tena!">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Receipt Number Prefix</label>
-                                <input type="text" id="setupPrefix" class="form-input" placeholder="AMI-" value="AMI-">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Currency</label>
-                                <select id="setupCurrency" class="form-select">
-                                    <option value="KES">KES - Kenyan Shilling</option>
-                                    <option value="USD">USD - US Dollar</option>
-                                    <option value="TZS">TZS - Tanzanian Shilling</option>
-                                    <option value="UGX">UGX - Ugandan Shilling</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step Navigation -->
-                    <div class="step-navigation">
-                        <button type="button" class="btn btn-outline" id="prevStep" disabled>← Previous</button>
-                        <div class="step-indicators">
-                            <span class="step-dot active" data-step="1"></span>
-                            <span class="step-dot" data-step="2"></span>
-                            <span class="step-dot" data-step="3"></span>
-                        </div>
-                        <button type="button" class="btn btn-primary" id="nextStep">Next →</button>
-                        <button type="submit" class="btn btn-success" id="submitSetup" style="display: none;">✅ Complete Setup</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- JavaScript Files -->
     <script src="js/firebase-config.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
